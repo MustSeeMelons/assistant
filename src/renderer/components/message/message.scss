@@ -1,0 +1,16 @@
+.message {
+    padding: 5px;
+
+    .m-title {
+        font-size: 18px;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: -1px;
+    }
+
+    .m-content {
+        font-size: 14px;
+        margin-top: 5px;
+        letter-spacing: -0.5px;
+    }
+}
