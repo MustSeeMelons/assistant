@@ -1,0 +1,78 @@
+@mixin base-btn {
+    width: 90px;
+    height: 30px;
+    border: none;
+    border-radius: 3px;
+    outline: none;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.question {
+    .description {
+        font-size: 14px;
+        letter-spacing: -0.2px;
+        font-weight: 500;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+    .radio-wrap {
+        display: flex;
+        flex-direction: column;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+    .option {
+        display: block;
+        font-size: 13px;
+        font-weight: 400;
+    }
+
+    .result-wrap {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin-top: 20px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        font-weight: 600;
+        color: #ffffff;
+
+        &.correct {
+            background-color: #83ff77;
+        }
+
+        &.wrong {
+            background-color: #b32c2c;
+            color: #ffffff;
+        }
+    }
+
+    .operations {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-evenly;
+
+        .btn-next {
+            @include base-btn();
+            background-color: #e2e056;
+            color: #ffffff;
+        }
+
+        .btn-sleep {
+            @include base-btn();
+            background-color: #ff6600;
+            color: #ffffff;
+        }
+
+        .btn-accept {
+            @include base-btn();
+            background-color: #ffea70;
+        }
+    }
+}

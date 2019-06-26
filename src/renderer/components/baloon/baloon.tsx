@@ -11,6 +11,7 @@ export const Baloon = (props: BallonProps) => {
     return (
         <div className="baloon">
             <CloseBtn onClick={props.onCloseHandler} />
+            {/* loading animation */}
             <div className="b-contnet">{props.children}</div>
         </div>
     );
