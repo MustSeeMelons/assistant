@@ -48,7 +48,7 @@ const TRIVIA_URL = "https://opentdb.com/api.php";
 export const fetchTriviaQuestions = async (): Promise<
     Array<ProcessedTriviaQuestion>
 > => {
-    const response = (await Axios.get(`${TRIVIA_URL}?amount=50`, {
+    const response = (await Axios.get(`${TRIVIA_URL}?amount=1`, {
         timeout: 60000,
     })) as TriviaResponse;
 

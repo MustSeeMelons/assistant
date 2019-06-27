@@ -14,6 +14,7 @@ interface RootState {
     tillTarget: number;
     questions: Array<ProcessedTriviaQuestion>;
     hasRequestFailed: boolean;
+    isRequestInProgress: boolean;
     currentQuestion?: ProcessedTriviaQuestion;
     currentAnswer?: string;
     isAnswerCorrect?: boolean;
@@ -29,10 +30,19 @@ class Root extends Component {
         currentQuestion: undefined,
         currentAnswer: undefined,
         isAnswerCorrect: undefined,
+        isRequestInProgress: false,
     };
 
     componentDidMount = async () => {
+        this.loadAndPrepareQuestions();
+    };
+
+    loadAndPrepareQuestions = async () => {
         try {
+            this.setState({
+                isRequestInProgress: true,
+            });
+
             const questions: Array<
                 ProcessedTriviaQuestion
             > = await fetchTriviaQuestions();
@@ -42,17 +52,22 @@ class Root extends Component {
                 questions: questions,
                 hasRequestFailed: false,
                 currentQuestion: currentQuestion,
+                isRequestInProgress: false,
+                currentAnswer: undefined,
+                isAnswerCorrect: undefined
             });
         } catch (e) {
-            console.log(e);
             this.setState({
-                hasRequestFailed: true,
+                hasRequestFailed: false,
+                isRequestInProgress: false,
             });
         }
     };
 
-    onNextQuestionHandler = async () => {
-        if(_.size(this.state.questions) > 0) {
+    onNextQuestionHandler = () => {
+        if (_.size(this.state.questions) === 0) {
+            this.loadAndPrepareQuestions();
+        } else {
             const clonedQuestions = _.cloneDeep(this.state.questions);
             const currentQuestion = _.first(clonedQuestions.splice(0, 1));
 
@@ -61,11 +76,9 @@ class Root extends Component {
                 currentQuestion: currentQuestion,
                 currentAnswer: undefined,
                 isAnswerCorrect: undefined,
-            })
-        } else {
-            // TODO: fetch moar questions
+            });
         }
-    }
+    };
 
     onCloseHandler = () => {
         const window = remote.getCurrentWindow();
@@ -107,7 +120,11 @@ class Root extends Component {
 
         return (
             <div className="root">
-                <Baloon onCloseHandler={this.onCloseHandler}>{child}</Baloon>
+                <Baloon
+                    isRequestInProgress={this.state.isRequestInProgress}
+                    onCloseHandler={this.onCloseHandler}>
+                    {child}
+                </Baloon>
                 <Clippy />
             </div>
         );

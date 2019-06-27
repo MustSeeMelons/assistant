@@ -16,7 +16,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: true,
         },
-        resizable: false,
+        resizable: true,
         icon: trayIcon,
         alwaysOnTop: true
     });
