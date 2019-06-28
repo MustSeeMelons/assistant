@@ -1,0 +1,72 @@
+@import "../../../vars.scss";
+
+@mixin base-btn {
+    width: 100%;
+    height: 40px;
+    border: none;
+    border-radius: 3px;
+    outline: none;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 3px;
+}
+
+.btn-next {
+    @include base-btn();
+    background-color: $accent-light;
+    color: $white;
+
+    &:hover {
+        background-color: $white;
+        color: $accent-light;
+    }
+}
+
+.btn-sleep {
+    @include base-btn();
+    background-color: $secondary-color;
+    color: $white;
+
+    &:hover {
+        background-color: $white;
+        color:  $secondary-color;
+    }
+}
+
+.btn-accept {
+    @include base-btn();
+    background-color: $accent-light;
+    color: $white;
+
+    &:hover {
+        background-color: $white;
+        color:  $accent-light;
+    }
+}
+
+.btn-close {
+    cursor: pointer;
+    border: none;
+    outline: none;
+    background-color: $accent-dark;
+
+    width: 20px;
+    height: 6px;
+
+    border-radius: 2px;
+
+    margin: 10px;
+
+    opacity: 0.5;
+    transition: opacity 0.2s ease-in-out;
+
+    align-self: flex-end;
+
+    &:hover {
+        opacity: 1;
+    }
+
+    &:active {
+        border: none;
+    }
+}

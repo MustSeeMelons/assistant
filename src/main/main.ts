@@ -1,10 +1,23 @@
 import { app, BrowserWindow, Tray, Menu, ipcMain } from "electron";
 import * as path from "path";
 import * as url from "url";
+import { EVENTS } from "../definitions";
 const trayIcon = require("../resources/images/clippy_tray.png");
 
 let mainWindow: Electron.BrowserWindow;
 let tray: Electron.Tray;
+let wakeTimeout: NodeJS.Timeout;
+
+process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
+
+const snoozeProcessor = () => {
+    wakeTimeout = setTimeout(() => {
+        mainWindow.show();
+        mainWindow.webContents.send(EVENTS.SLEEP);
+    }, 5000);
+
+    mainWindow.hide();
+};
 
 function createWindow() {
     // Create the browser window.
@@ -16,9 +29,9 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: true,
         },
-        resizable: true,
+        resizable: false,
         icon: trayIcon,
-        alwaysOnTop: true
+        alwaysOnTop: true,
     });
 
     // hiding the default menu
@@ -41,12 +54,16 @@ function createWindow() {
         // Dereference the window object, usually you would store windows
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
+        if (wakeTimeout) {
+            wakeTimeout.unref();
+        }
         mainWindow = null;
     });
 
     mainWindow.on("minimize", function(event: any) {
         event.preventDefault();
         mainWindow.hide();
+        snoozeProcessor();
     });
 
     tray = new Tray(trayIcon);
@@ -70,9 +87,9 @@ function createWindow() {
     tray.setToolTip("Clippy");
     tray.setContextMenu(contextMenu);
 
-    ipcMain.addListener("", () => {
-
-    })
+    ipcMain.addListener(EVENTS.SLEEP, () => {
+        snoozeProcessor();
+    });
 }
 
 // This method will be called when Electron has finished

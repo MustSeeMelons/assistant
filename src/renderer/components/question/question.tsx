@@ -2,11 +2,13 @@ import React from "react";
 import "./question.scss";
 import _ from "lodash";
 import { ProcessedTriviaQuestion } from "../../api/api";
+import { Button } from "../button/button";
 
 export interface QuestionProps extends ProcessedTriviaQuestion {
     onAcceptAnswer: (event: React.MouseEvent) => void;
     onChoiceChange: (choice: string) => void;
     onNextQuestionHandler: () => void;
+    onSleepHandler: () => void;
     currentAnswer: string;
     isAnswerCorrect?: boolean;
 }
@@ -25,18 +27,18 @@ export const Question = (props: QuestionProps) => {
     const renderOperations = () => {
         return props.isAnswerCorrect !== undefined ? (
             <div className="operations">
-                <button
-                    className="btn-next"
-                    onClick={props.onNextQuestionHandler}>
+                <Button type="btn-next" onClick={props.onNextQuestionHandler}>
                     Another!
-                </button>
-                <button className="btn-sleep">Sleep..</button>
+                </Button>
+                <Button type="btn-sleep" onClick={props.onSleepHandler}>
+                    Sleep..
+                </Button>
             </div>
         ) : (
             <div className="operations">
-                <button className="btn-accept" onClick={props.onAcceptAnswer}>
+                <Button type="btn-accept" onClick={props.onAcceptAnswer}>
                     Accept!
-                </button>
+                </Button>
             </div>
         );
     };

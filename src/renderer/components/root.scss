@@ -1,7 +1,11 @@
+@import "../../vars.scss";
+
 body {
     margin: 0;
     overflow: hidden;
     font-family: "Roboto";
+    color: $accent-dark;
+    user-select: none;
 }
 
 .root {

@@ -1,12 +1,12 @@
 import React from "react";
 import "./baloon.scss";
-import { CloseBtn } from "../close-btn/close-btn";
+import { Button } from "../button/button";
 import { Spinner } from "../spinner/spinner";
 import classNames from "classnames";
 
 export interface BallonProps {
     children: React.ReactNode;
-    onCloseHandler: () => void;
+    onCloseHandler: (event: React.MouseEvent) => void;
     isRequestInProgress: boolean;
 }
 
@@ -16,7 +16,7 @@ export const Baloon = (props: BallonProps) => {
             className={classNames("baloon", {
                 "in-progress": props.isRequestInProgress,
             })}>
-            <CloseBtn onClick={props.onCloseHandler} />
+            <Button type="btn-close" onClick={props.onCloseHandler} />
             {props.isRequestInProgress && <Spinner />}
             <div className="b-contnet">{props.children}</div>
         </div>

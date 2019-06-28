@@ -1,3 +1,5 @@
+@import "../../../vars.scss";
+
 .spinner {
     z-index: 999;
     display: flex;
@@ -9,10 +11,10 @@
     background-color: rgba(255, 255, 255, 0.5);
 
     .spinner-icon {
-        border: 16px solid #f3f3f3;
-        border-top: 16px solid #3498db;
+        border: 16px double $accent-dark;
+        border-top: 16px solid $accent-light;
         border-radius: 50%;
-        animation: spin 1s ease-in-out infinite;
+        animation: spin 0.7s ease-in-out infinite;
 
         height: 60px;
         width: 60px;

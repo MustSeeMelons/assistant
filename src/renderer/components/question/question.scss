@@ -1,14 +1,8 @@
-@mixin base-btn {
-    width: 90px;
-    height: 30px;
-    border: none;
-    border-radius: 3px;
-    outline: none;
-    text-transform: uppercase;
-    font-weight: 600;
-}
+@import "../../../vars.scss";
 
 .question {
+    transition: all 0.5s linear;
+
     .description {
         font-size: 14px;
         letter-spacing: -0.2px;
@@ -40,15 +34,15 @@
         padding-top: 10px;
         padding-bottom: 10px;
         font-weight: 600;
-        color: #ffffff;
 
         &.correct {
-            background-color: #83ff77;
+            background-color: $accent-light;
+            color: $accent-dark;
         }
 
         &.wrong {
-            background-color: #b32c2c;
-            color: #ffffff;
+            background-color: $accent-dark;
+            color: $accent-light;
         }
     }
 
@@ -57,22 +51,5 @@
         margin-bottom: 10px;
         display: flex;
         justify-content: space-evenly;
-
-        .btn-next {
-            @include base-btn();
-            background-color: #e2e056;
-            color: #ffffff;
-        }
-
-        .btn-sleep {
-            @include base-btn();
-            background-color: #ff6600;
-            color: #ffffff;
-        }
-
-        .btn-accept {
-            @include base-btn();
-            background-color: #ffea70;
-        }
     }
 }

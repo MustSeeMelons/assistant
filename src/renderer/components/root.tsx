@@ -9,6 +9,7 @@ import "../../../node_modules/roboto-fontface/css/roboto/roboto-fontface.css";
 import { Message } from "./message/message";
 import { ProcessedTriviaQuestion, fetchTriviaQuestions } from "../api/api";
 import { Question } from "./question/question";
+import { EVENTS } from "../../definitions";
 
 interface RootState {
     tillTarget: number;
@@ -21,7 +22,12 @@ interface RootState {
 }
 
 class Root extends Component {
-    targetDate = moment("2019-7-31");
+    targetDate = moment("2019-07-31", "YYYY-MM-DD");
+
+    constructor(props: any) {
+        super(props);
+        this.setupIpcMainHandler();
+    }
 
     state: RootState = {
         tillTarget: this.targetDate.businessDiff(moment()),
@@ -31,6 +37,13 @@ class Root extends Component {
         currentAnswer: undefined,
         isAnswerCorrect: undefined,
         isRequestInProgress: false,
+    };
+
+    setupIpcMainHandler = () => {
+        ipcRenderer.on(EVENTS.SLEEP, () => {
+            console.log("hello")
+            this.loadAndPrepareQuestions();
+        });
     };
 
     componentDidMount = async () => {
@@ -54,7 +67,7 @@ class Root extends Component {
                 currentQuestion: currentQuestion,
                 isRequestInProgress: false,
                 currentAnswer: undefined,
-                isAnswerCorrect: undefined
+                isAnswerCorrect: undefined,
             });
         } catch (e) {
             this.setState({
@@ -80,7 +93,7 @@ class Root extends Component {
         }
     };
 
-    onCloseHandler = () => {
+    onCloseHandler = (event: React.MouseEvent) => {
         const window = remote.getCurrentWindow();
         window.minimize();
     };
@@ -101,11 +114,22 @@ class Root extends Component {
         }
     };
 
+    onSleepHandler = () => {
+        this.setState({
+            currentQuestion: undefined,
+            currentAnswer: undefined,
+            isAnswerCorrect: undefined,
+        });
+
+        ipcRenderer.send(EVENTS.SLEEP);
+    };
+
     render() {
         let child;
         if (this.state.currentQuestion) {
             child = (
                 <Question
+                    onSleepHandler={this.onSleepHandler}
                     isAnswerCorrect={this.state.isAnswerCorrect}
                     currentAnswer={this.state.currentAnswer}
                     onChoiceChange={this.onChoiceChange}

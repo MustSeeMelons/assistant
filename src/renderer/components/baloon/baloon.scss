@@ -1,14 +1,18 @@
+@import "../../../vars.scss";
+
 .baloon {
     position: relative;
-    background-color: #ffd666;
+    background-color: $base-color;
 
     margin-bottom: 10px;
-
-    padding-bottom: 10px;
     border-radius: 6px;
 
     display: flex;
     flex-direction: column;
+    justify-content: space-evenly;
+
+    min-height: 150px;
+    min-width: 300px;
 
     .close-btn {
         margin: 10px;
@@ -22,18 +26,15 @@
         content: "";
         position: absolute;
         top: 100%;
-        left: 70px;
+        left: 30%;
         width: 0;
-        border-top: 20px solid #ffd666;
+        border-top: 20px solid $base-color;
         border-left: 20px solid transparent;
     }
 
     &.in-progress {
         &::before {
-            // Display none is the easy way, we can fine tune the color as well
             display: none;
-            content: "";
-            border-top: 20px solid #ffd666b6;
         }
     }
 }
