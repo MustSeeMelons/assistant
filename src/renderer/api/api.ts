@@ -1,6 +1,9 @@
+import { URLBuilder, GET_OPTS } from "./apiConfig";
+import { API_RESPONSE_CODES } from "./../../definitions";
 import Axios, { AxiosResponse } from "axios";
 import _ from "lodash";
 import { AllHtmlEntities } from "html-entities";
+import { LOGGER } from "../../logger";
 
 const HTML_ENTITIES = new AllHtmlEntities();
 
@@ -34,28 +37,106 @@ export interface ProcessedTriviaQuestion extends BaseQuestion {
 }
 
 /**
- * The full fat Axios Trivia response.
+ * Base trivia response, containes only the api status code.
  */
-export interface TriviaResponse extends AxiosResponse {
+export interface BaseTriviaResponse extends AxiosResponse {
+    data: {
+        response_code: number;
+    };
+}
+
+/**
+ * The trivia question retrieval response.
+ */
+export interface TriviaResponse extends BaseTriviaResponse {
     data: {
         response_code: number;
         results: Array<RawTriviaQuestion>;
     };
 }
 
-const TRIVIA_URL = "https://opentdb.com/api.php";
+/**
+ * The trivia session retrieval response.
+ */
+export interface TriviaTokenResponse extends BaseTriviaResponse {
+    data: {
+        response_code: number;
+        response_message: string;
+        token: string;
+    };
+}
 
-export const fetchTriviaQuestions = async (): Promise<
-    Array<ProcessedTriviaQuestion>
-> => {
-    const response = (await Axios.get(`${TRIVIA_URL}?amount=1`, {
-        timeout: 60000,
-    })) as TriviaResponse;
+/**
+ * Represents a api get call.
+ */
+export type IAPIGet = <R extends AxiosResponse>(url: string) => Promise<R>;
 
-    return decodeAnswers(response);
+export interface TriviaApi {
+    fetchTriviaQuestions: (
+        questionCount: number
+    ) => Promise<Array<ProcessedTriviaQuestion>>;
+}
+
+export const statusCheck = <R extends BaseTriviaResponse>(response: R) => {
+    const code = response.data.response_code;
+    LOGGER.info(`STATUS CHECK RESULT: ${code}`);
+    if (code !== 0) {
+        throw code;
+    }
 };
 
-export const decodeAnswers = (
+export const API = (): TriviaApi => {
+    let token: string;
+
+    const tokenCheck = async () => {
+        LOGGER.info("TOKEN CHECK");
+        if (!token) {
+            LOGGER.info("TOKEN GET");
+            const response: TriviaTokenResponse = await apiGET(
+                URLBuilder.tokenGet()
+            );
+            statusCheck(response);
+            token = response.data.token;
+        }
+    };
+
+    const resetToken = async () => {
+        LOGGER.info("TOKEN RESET");
+        await apiGET(URLBuilder.tokenReset(token));
+    };
+
+    const apiGET: IAPIGet = async (url: string) => {
+        return Axios.get(url, GET_OPTS);
+    };
+
+    const sessionWrapper = async (apiCall: () => Promise<any>) => {
+        try {
+            await tokenCheck();
+            return await apiCall();
+        } catch (e) {
+            if (e === API_RESPONSE_CODES.TOKEN_EMPTY) {
+                LOGGER.info("TOKEN EMPTY");
+                await resetToken();
+                return await apiCall();
+            } else {
+                LOGGER.error(`API THROW ERROR: ${e}`);
+                throw e;
+            }
+        }
+    };
+
+    return {
+        fetchTriviaQuestions: async (questionCount: number) => {
+            LOGGER.info("QUESTION FETCH");
+            const response = (await sessionWrapper(() => {
+                return apiGET(URLBuilder.questionGet(questionCount, token));
+            })) as TriviaResponse;
+            return decodeAnswers(response);
+        },
+    };
+};
+
+const decodeAnswers = (
     response: TriviaResponse
 ): Array<ProcessedTriviaQuestion> => {
     return response.data.results.map((rawQuestion: RawTriviaQuestion) => {

@@ -1,0 +1,16 @@
+@import "../../../vars.scss";
+
+.error {
+    padding: 20px;
+
+    .err-title {
+        text-transform: uppercase;
+        font-weight: 600;
+        font-size: 18px;
+    }
+
+    .err-description {
+        font-weight: 400;
+        font-size: 14px;
+    }
+}

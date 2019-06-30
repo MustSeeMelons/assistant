@@ -1,12 +1,17 @@
-To do development:
+## To do development:
 
-1. run `start-renderer-dev` and hack in the browser.
-2. run `start-main-dev` to also run electron (No hot reload for now).
+`npm start`
 
-To package:
+## To package:
 
-1. npm run `pack`
+`npm run pack`
 
-To build release:
+## To build release:
 
-1. npm run `dist`
+`npm run dist`
+
+## What is this?
+
+A windows app that will bug you to answer trivia questions.
+
+Built with `Electron` and `React` and `Typescript`.

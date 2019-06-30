@@ -2,15 +2,12 @@
   "name": "clippy",
   "version": "0.0.1",
   "description": "Member clippy?",
-  "main": "index.js",
+  "main": "./dist/main.bundle.js",
   "scripts": {
-    "build-main": "webpack --config ./webpack.prod.js",
-    "build-renderer": "webpack --config ./webpack.prod.js",
-    "build": "npm run build-main && npm run build-renderer",
+    "build": "webpack --config ./webpack.prod.js",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "start-renderer-dev": "webpack-dev-server --config ./webpack.dev.js",
-    "start-main-dev": "webpack --config ./webpack.dev.js && electron ./dist/main.bundle.js"
+    "start": "webpack --config ./webpack.dev.js && electron ./dist/main.bundle.js"
   },
   "repository": {
     "type": "git"
@@ -27,6 +24,7 @@
     "@types/lodash": "4.14.134",
     "@types/html-entities": "1.2.16",
     "@types/classnames": "2.2.8",
+    "@types/winston": "2.4.4",
     "css-loader": "^2.1.1",
     "electron": "^5.0.2",
     "file-loader": "^3.0.1",
@@ -40,7 +38,8 @@
     "webpack": "^4.32.2",
     "webpack-cli": "^3.3.5",
     "webpack-dev-server": "^3.4.1",
-    "electron-builder": "20.44.4"
+    "electron-builder": "20.44.4",
+    "copy-webpack-plugin": "5.0.3"
   },
   "dependencies": {
     "react": "^16.8.6",
@@ -51,15 +50,17 @@
     "lodash": "4.17.11",
     "axios": "0.19.0",
     "html-entities": "1.2.1",
-    "classnames": "2.2.6"
+    "classnames": "2.2.6",
+    "winston": "3.2.1"
   },
   "build": {
     "appId": "fake_clippy",
-    "nodeGypRebuild": true,
+    "files": [
+      "./dist/**/*"
+    ],
     "win": {
-      "msi": true,
-      "target": "nsis"
-    },
-    "iconUrl": "https://lh3.googleusercontent.com/YGqr3CRLm45jMF8eM8eQxc1VSERDTyzkv1CIng0qjcenJZxqV5DBgH5xlRTawnqNPcOp=w300"
+      "target": "portable",
+      "icon": "https://lh3.googleusercontent.com/YGqr3CRLm45jMF8eM8eQxc1VSERDTyzkv1CIng0qjcenJZxqV5DBgH5xlRTawnqNPcOp=w300"
+    }
   }
 }

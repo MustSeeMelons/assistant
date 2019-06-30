@@ -1,20 +1,46 @@
-import { app, BrowserWindow, Tray, Menu, ipcMain } from "electron";
+import { LOGGER } from "./../logger";
+import { AppConfig, DEFAULT_CONFIG } from "./../definitions";
+import { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage } from "electron";
 import * as path from "path";
 import * as url from "url";
 import { EVENTS } from "../definitions";
-const trayIcon = require("../resources/images/clippy_tray.png");
+import * as fs from "fs";
+
+// Importing files, so that webpack copies them
+const trayImg = require("../resources/images/clippy_tray.png");
+
+const nativeIcon = nativeImage.createFromPath(
+    path.join(__dirname, "src/resources/images/clippy_tray.png")
+);
 
 let mainWindow: Electron.BrowserWindow;
 let tray: Electron.Tray;
 let wakeTimeout: NodeJS.Timeout;
+let config: AppConfig;
 
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 
+const loadConfiguration = () => {
+    try {
+        const buffer = fs.readFileSync(
+            path.join(__dirname, "src/resources/config.json")
+        );
+
+        config = JSON.parse(buffer.toString("UTF-8")) as AppConfig;
+    } catch (e) {
+        LOGGER.error(`$CONFIG READ FAIL ${e}`);
+        config = DEFAULT_CONFIG;
+    }
+};
+
+/*
+    Hides the window setting a timeout for its reappearance.
+ */
 const snoozeProcessor = () => {
     wakeTimeout = setTimeout(() => {
         mainWindow.show();
         mainWindow.webContents.send(EVENTS.SLEEP);
-    }, 5000);
+    }, config.sleepTime);
 
     mainWindow.hide();
 };
@@ -22,16 +48,16 @@ const snoozeProcessor = () => {
 function createWindow() {
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        height: 600,
-        width: 400,
+        height: 600, // 600
+        width: 400, // 400
         frame: false,
         transparent: true,
         webPreferences: {
             nodeIntegration: true,
         },
         resizable: false,
-        icon: trayIcon,
         alwaysOnTop: true,
+        icon: nativeIcon,
     });
 
     // hiding the default menu
@@ -66,9 +92,9 @@ function createWindow() {
         snoozeProcessor();
     });
 
-    tray = new Tray(trayIcon);
+    tray = new Tray(nativeIcon);
 
-    var contextMenu = Menu.buildFromTemplate([
+    const contextMenu = Menu.buildFromTemplate([
         {
             label: "Summon Clippy",
             click: function() {
@@ -89,6 +115,13 @@ function createWindow() {
 
     ipcMain.addListener(EVENTS.SLEEP, () => {
         snoozeProcessor();
+    });
+
+    loadConfiguration();
+
+    // Sending the configuration over to the renderer
+    mainWindow.webContents.on("did-finish-load", () => {
+        mainWindow.webContents.send(EVENTS.CONFIG, config);
     });
 }
 

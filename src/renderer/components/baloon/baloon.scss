@@ -10,9 +10,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-
-    min-height: 150px;
-    min-width: 300px;
+    align-items: center;
 
     .close-btn {
         margin: 10px;
