@@ -77,26 +77,31 @@ export interface TriviaApi {
     ) => Promise<Array<ProcessedTriviaQuestion>>;
 }
 
-export const statusCheck = <R extends BaseTriviaResponse>(response: R) => {
-    const code = response.data.response_code;
-    LOGGER.info(`STATUS CHECK RESULT: ${code}`);
-    if (code !== 0) {
-        throw code;
-    }
-};
-
 export const API = (): TriviaApi => {
-    let token: string;
+    let token: string = "";
+
+    const errCheck = <R extends BaseTriviaResponse>(response: R) => {
+        const code = response.data.response_code;
+        LOGGER.info(`STATUS CHECK RESULT: ${code}`);
+        if (code != 0) {
+            LOGGER.info(`THROW CODE: ${code}`);
+            throw code;
+        }
+    };
+
+    const tokenGet = async () => {
+        LOGGER.info("TOKEN GET");
+        const response: TriviaTokenResponse = await apiGET(
+            URLBuilder.tokenGet()
+        );
+        errCheck(response);
+        token = response.data.token;
+    };
 
     const tokenCheck = async () => {
         LOGGER.info("TOKEN CHECK");
         if (!token) {
-            LOGGER.info("TOKEN GET");
-            const response: TriviaTokenResponse = await apiGET(
-                URLBuilder.tokenGet()
-            );
-            statusCheck(response);
-            token = response.data.token;
+            await tokenGet();
         }
     };
 
@@ -106,17 +111,26 @@ export const API = (): TriviaApi => {
     };
 
     const apiGET: IAPIGet = async (url: string) => {
+        LOGGER.info(`URL: ${url}`);
         return Axios.get(url, GET_OPTS);
     };
 
     const sessionWrapper = async (apiCall: () => Promise<any>) => {
         try {
             await tokenCheck();
-            return await apiCall();
+            const response = await apiCall();
+            LOGGER.info(`Response: ${response}`);
+            errCheck(response);
+            return response;
         } catch (e) {
             if (e === API_RESPONSE_CODES.TOKEN_EMPTY) {
                 LOGGER.info("TOKEN EMPTY");
                 await resetToken();
+                return await apiCall();
+            } else if (e === API_RESPONSE_CODES.TOKEN_NOT_FOUND) {
+                LOGGER.info("TOKEN NOT FOUND");
+                token = "";
+                await tokenGet();
                 return await apiCall();
             } else {
                 LOGGER.error(`API THROW ERROR: ${e}`);
@@ -128,9 +142,11 @@ export const API = (): TriviaApi => {
     return {
         fetchTriviaQuestions: async (questionCount: number) => {
             LOGGER.info("QUESTION FETCH");
+
             const response = (await sessionWrapper(() => {
                 return apiGET(URLBuilder.questionGet(questionCount, token));
             })) as TriviaResponse;
+
             return decodeAnswers(response);
         },
     };
