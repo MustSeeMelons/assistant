@@ -1,6 +1,6 @@
 {
   "name": "clippy",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Member clippy?",
   "main": "./dist/main.bundle.js",
   "scripts": {
@@ -55,12 +55,13 @@
   },
   "build": {
     "appId": "fake_clippy",
+    "productName":"Fake Clippy",
     "files": [
       "./dist/**/*"
     ],
     "win": {
       "target": "portable",
-      "icon": "https://lh3.googleusercontent.com/YGqr3CRLm45jMF8eM8eQxc1VSERDTyzkv1CIng0qjcenJZxqV5DBgH5xlRTawnqNPcOp=w300"
+      "icon": "./src/resources/images/clippy.png"
     }
   }
 }

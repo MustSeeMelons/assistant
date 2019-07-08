@@ -1,5 +1,5 @@
 import { LOGGER } from "./../logger";
-import { AppConfig, DEFAULT_CONFIG } from "./../definitions";
+import { AppConfig, DEFAULT_CONFIG, ResizeEvent } from "./../definitions";
 import { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage } from "electron";
 import * as path from "path";
 import * as url from "url";
@@ -39,7 +39,7 @@ const loadConfiguration = () => {
 const snoozeProcessor = () => {
     wakeTimeout = setTimeout(() => {
         mainWindow.show();
-        mainWindow.webContents.send(EVENTS.SLEEP);
+        mainWindow.webContents.send(EVENTS.WAKE);
     }, config.sleepTime);
 
     mainWindow.hide();
@@ -48,14 +48,15 @@ const snoozeProcessor = () => {
 function createWindow() {
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        height: 600, // 600
-        width: 400, // 400
+        height: 400,
+        width: 500,
         frame: false,
         transparent: true,
         webPreferences: {
             nodeIntegration: true,
+            devTools: false
         },
-        resizable: false,
+        resizable: true,
         alwaysOnTop: true,
         icon: nativeIcon,
     });
@@ -115,6 +116,10 @@ function createWindow() {
 
     ipcMain.addListener(EVENTS.SLEEP, () => {
         snoozeProcessor();
+    });
+
+    ipcMain.on(EVENTS.RESIZE, (e: any, event: ResizeEvent) => {
+        mainWindow.setContentSize(event.x, event.y);
     });
 
     loadConfiguration();

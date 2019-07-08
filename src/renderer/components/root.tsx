@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import ReactDOM from "react-dom";
 import _ from "lodash";
 import "./root.scss";
 import { remote, ipcRenderer } from "electron";
@@ -9,7 +10,7 @@ import "../../../node_modules/roboto-fontface/css/roboto/roboto-fontface.css";
 import { Message } from "./message/message";
 import { ProcessedTriviaQuestion, API, TriviaApi } from "../api/api";
 import { Question } from "./question/question";
-import { EVENTS, AppConfig } from "../../definitions";
+import { EVENTS, AppConfig, ResizeEvent } from "../../definitions";
 import { Error } from "./error/error";
 
 interface RootState {
@@ -26,11 +27,14 @@ interface RootState {
 class Root extends Component {
     targetDate = moment("2019-07-31", "YYYY-MM-DD");
     api: TriviaApi = API();
-    retryTimeout: NodeJS.Timeout;
+    rootRef: React.RefObject<HTMLDivElement>;
+    autoAnswerTimeout: NodeJS.Timeout;
+    nextQuestionTimeout: NodeJS.Timeout;
 
     constructor(props: any) {
         super(props);
         this.setupIpcMainHandler();
+        this.rootRef = React.createRef();
     }
 
     state: RootState = {
@@ -43,27 +47,43 @@ class Root extends Component {
         isRequestInProgress: false,
     };
 
+    componentDidMount = () => {
+        this.nextQuestionTimeout = setTimeout(() => {
+            this.onNextQuestionHandler();
+        }, this.state.config.autoDelay);
+    };
+
+    componentDidUpdate = () => {
+        const curr = this.rootRef.current;
+
+        ipcRenderer.send(EVENTS.RESIZE, {
+            x: curr.clientWidth,
+            y: curr.clientHeight,
+        } as ResizeEvent);
+    };
+
     componentWillUnmount = () => {
-        if (this.retryTimeout) {
-            this.retryTimeout.unref();
-        }
+        clearTimeout(this.autoAnswerTimeout);
+        clearTimeout(this.nextQuestionTimeout);
     };
 
     setupIpcMainHandler = () => {
-        ipcRenderer.on(EVENTS.SLEEP, () => {
-            this.loadAndPrepareQuestions(this.state.config);
-        });
-
         ipcRenderer.on(EVENTS.CONFIG, (event: any, config: AppConfig) => {
             this.setState({
                 config: config,
             });
+        });
 
-            this.loadAndPrepareQuestions(config);
+        ipcRenderer.on(EVENTS.WAKE, (event: any) => {
+            this.nextQuestionTimeout = setTimeout(() => {
+                this.onNextQuestionHandler();
+            }, this.state.config.autoDelay);
         });
     };
 
     loadAndPrepareQuestions = async (config: AppConfig) => {
+        clearTimeout(this.nextQuestionTimeout);
+
         try {
             this.setState({
                 isRequestInProgress: true,
@@ -83,6 +103,10 @@ class Root extends Component {
                 currentAnswer: undefined,
                 isAnswerCorrect: undefined,
             });
+
+            this.autoAnswerTimeout = setTimeout(() => {
+                this.autoAnswerHandler(currentQuestion);
+            }, this.state.config.autoDelay);
         } catch (e) {
             this.setState({
                 hasRequestFailed: true,
@@ -95,12 +119,36 @@ class Root extends Component {
         }
     };
 
+    /**
+     * Creates a timeout to auto answer a question.
+     */
+    autoAnswerHandler = (currentQuestion: ProcessedTriviaQuestion) => {
+        this.setState({
+            currentAnswer: currentQuestion.correct_answer,
+            isAnswerCorrect: true,
+        });
+
+        this.nextQuestionTimeout = setTimeout(() => {
+            this.onNextQuestionHandler();
+        }, this.state.config.autoDelay);
+    };
+
+    /**
+     * Handler for selecting the next question.
+     */
     onNextQuestionHandler = () => {
+        // Clearing the next question timeout
+        clearTimeout(this.nextQuestionTimeout);
+
         if (_.size(this.state.questions) === 0) {
             this.loadAndPrepareQuestions(this.state.config);
         } else {
             const clonedQuestions = _.cloneDeep(this.state.questions);
             const currentQuestion = _.first(clonedQuestions.splice(0, 1));
+
+            this.autoAnswerTimeout = setTimeout(() => {
+                this.autoAnswerHandler(currentQuestion);
+            }, this.state.config.autoDelay);
 
             this.setState({
                 questions: clonedQuestions,
@@ -111,12 +159,8 @@ class Root extends Component {
         }
     };
 
-    onCloseHandler = (event: React.MouseEvent) => {
-        const window = remote.getCurrentWindow();
-        window.minimize();
-    };
-
     onAcceptAnswerHandler = (event: React.MouseEvent) => {
+        // TODO: add class, delay state change
         this.setState({
             isAnswerCorrect:
                 this.state.currentAnswer ===
@@ -126,28 +170,66 @@ class Root extends Component {
 
     onChoiceChange = (choice: string) => {
         if (this.state.isAnswerCorrect === undefined) {
+            clearTimeout(this.autoAnswerTimeout);
+            this.autoAnswerTimeout = setTimeout(() => {
+                this.autoAnswerHandler(this.state.currentQuestion);
+            }, this.state.config.autoDelay);
+
             this.setState({
                 currentAnswer: choice,
             });
         }
     };
 
+    /**
+     * Resetting state so we get a message on wake.
+     */
     onSleepHandler = () => {
-        this.setState({
-            currentQuestion: undefined,
-            currentAnswer: undefined,
-            isAnswerCorrect: undefined,
-        });
+        clearTimeout(this.nextQuestionTimeout);
+        clearTimeout(this.autoAnswerTimeout);
 
-        ipcRenderer.send(EVENTS.SLEEP);
+        this.setState(
+            () => {
+                return {
+                    currentQuestion: undefined,
+                    currentAnswer: undefined,
+                    isAnswerCorrect: undefined,
+                    hasRequestFailed: false,
+                    isRequestInProgress: false,
+                    questions: [],
+                };
+            },
+            () => {
+                ipcRenderer.send(EVENTS.SLEEP);
+            }
+        );
     };
 
-    renderGoodbye = () => {
-        if (!this.state.currentQuestion && !this.state.hasRequestFailed) {
-            return <Message daysLeft={this.state.tillTarget} />;
+    renderMessage = () => {
+        if (
+            !this.state.currentQuestion &&
+            !this.state.hasRequestFailed &&
+            this.state.config
+        ) {
+            const message = _.sample(this.state.config.messageConfig);
+            return (
+                <Message
+                    title={message.title}
+                    text={message.text}
+                    onAccept={() => {
+                        this.loadAndPrepareQuestions(this.state.config);
+                    }}
+                    onDeny={() => {
+                        this.onSleepHandler();
+                    }}
+                />
+            );
         }
     };
 
+    /**
+     * Renders a trivia question.
+     */
     renderQuestion = () => {
         if (this.state.currentQuestion && !this.state.hasRequestFailed) {
             return (
@@ -172,11 +254,11 @@ class Root extends Component {
 
     render() {
         return (
-            <div className="root">
+            <div ref={this.rootRef} className="root">
                 <Baloon
                     isRequestInProgress={this.state.isRequestInProgress}
-                    onCloseHandler={this.onCloseHandler}>
-                    {this.renderGoodbye()}
+                    onSleepHandler={this.onSleepHandler}>
+                    {this.renderMessage()}
                     {this.renderQuestion()}
                     {this.renderError()}
                 </Baloon>

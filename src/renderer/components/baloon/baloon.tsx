@@ -6,7 +6,7 @@ import classNames from "classnames";
 
 export interface BallonProps {
     children: React.ReactNode;
-    onCloseHandler: (event: React.MouseEvent) => void;
+    onSleepHandler: (event: React.MouseEvent) => void;
     isRequestInProgress: boolean;
 }
 
@@ -16,7 +16,7 @@ export const Baloon = (props: BallonProps) => {
             className={classNames("baloon", {
                 "in-progress": props.isRequestInProgress,
             })}>
-            <Button type="btn-close" onClick={props.onCloseHandler} />
+            <Button type="btn-close" onClick={props.onSleepHandler} />
             {props.isRequestInProgress && <Spinner />}
             <div className="b-contnet">{props.children}</div>
         </div>

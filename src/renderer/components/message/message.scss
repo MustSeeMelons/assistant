@@ -1,5 +1,8 @@
+@import "../../../vars.scss";
+
 .message {
-    padding: 20px;
+    padding: 10px;
+    padding-top: 0;
 
     .m-title {
         font-size: 20px;
@@ -12,5 +15,16 @@
         font-size: 19px;
         margin-top: 5px;
         letter-spacing: -0.5px;
+    }
+
+    .m-operations {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+
+        .btn-next, .btn-sleep {
+            border: 1px solid $accent-dark;
+            border-radius: 3px;
+        }
     }
 }

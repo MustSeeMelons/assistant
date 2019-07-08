@@ -1,4 +1,20 @@
 {
     "questionAmount": 1,
-    "sleepTime": 5000
+    "sleepTime": 600000,
+    "wakeDelay": 600000,
+    "autoDelay": 600000,
+    "messageConfig": [
+        {
+            "title": "Looks like you are writing a letter",
+            "text": "Maybe you want to answer some trivia questions?"
+        },
+        {
+            "title": "Hello, my name is Clippy!",
+            "text": "Want to take a break?"
+        },
+        {
+            "title": "Help?",
+            "text": "I can't move."
+        }
+    ]
 }

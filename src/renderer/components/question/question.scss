@@ -1,7 +1,9 @@
 @import "../../../vars.scss";
 
 .question {
-    padding: 20px;
+    padding: 10px;
+    padding-top: 0;
+    padding-bottom: 0;
 
     .description {
         font-size: 14px;
@@ -35,6 +37,8 @@
         padding-bottom: 10px;
         font-weight: 600;
 
+        animation: intro 0.5s;
+
         &.correct {
             background-color: $accent-light;
             color: $accent-dark;
@@ -44,6 +48,15 @@
             background-color: $accent-dark;
             color: $accent-light;
         }
+
+        @keyframes intro {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
     }
 
     .operations {
@@ -51,5 +64,9 @@
         margin-bottom: 10px;
         display: flex;
         justify-content: space-evenly;
+
+        .btn-accept {
+            max-width: 50%;
+        }
     }
 }

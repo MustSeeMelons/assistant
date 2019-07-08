@@ -12,6 +12,6 @@ export const LOGGER: Logger = createLogger({
         new transports.File({
             filename: "app-log.log",
         }),
-        new transports.Console(),
+        // new transports.Console(),
     ],
 });
