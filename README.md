@@ -15,3 +15,8 @@
 A windows app that will bug you to answer trivia questions.
 
 Built with `Electron` and `React` and `Typescript`.
+
+## Whats next?
+
+- More animations?
+- Animated clippy?
