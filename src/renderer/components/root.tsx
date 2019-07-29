@@ -48,9 +48,11 @@ class Root extends Component {
     };
 
     componentDidMount = () => {
-        this.nextQuestionTimeout = setTimeout(() => {
-            this.onNextQuestionHandler();
-        }, this.state.config.autoDelay);
+        if(this.state.config){
+            this.nextQuestionTimeout = setTimeout(() => {
+                this.onNextQuestionHandler();
+            }, this.state.config.autoDelay);
+        }
     };
 
     componentDidUpdate = () => {
@@ -72,6 +74,10 @@ class Root extends Component {
             this.setState({
                 config: config,
             });
+
+            this.nextQuestionTimeout = setTimeout(() => {
+                this.onNextQuestionHandler();
+            }, config.autoDelay);
         });
 
         ipcRenderer.on(EVENTS.WAKE, (event: any) => {

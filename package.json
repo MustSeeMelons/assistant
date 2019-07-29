@@ -55,7 +55,7 @@
   },
   "build": {
     "appId": "fake_clippy",
-    "productName":"Fake Clippy",
+    "productName": "Fake Clippy",
     "files": [
       "./dist/**/*"
     ],
