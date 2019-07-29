@@ -48,7 +48,7 @@ class Root extends Component {
     };
 
     componentDidMount = () => {
-        if(this.state.config){
+        if (this.state.config) {
             this.nextQuestionTimeout = setTimeout(() => {
                 this.onNextQuestionHandler();
             }, this.state.config.autoDelay);
