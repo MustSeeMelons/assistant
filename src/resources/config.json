@@ -3,8 +3,7 @@
     "sleepTime": 600000,
     "wakeDelay": 600000,
     "autoDelay": 600000,
-    "messageConfig": [
-        {
+    "messageConfig": [{
             "title": "Looks like you are writing a letter",
             "text": "Maybe you want to answer some trivia questions?"
         },
@@ -13,8 +12,20 @@
             "text": "Want to take a break?"
         },
         {
-            "title": "Help?",
-            "text": "I can't move."
+            "title": "Kock knock",
+            "text": "It's me again"
+        },
+        {
+            "title": "Riddle me this",
+            "text": "Who bugs you every 10 minutes?"
+        },
+        {
+            "title": "Why is 6 afraid of 7?",
+            "text": "Because 7 8 9"
+        },
+        {
+            "title": "Did I interupt you?",
+            "text": "Good."
         }
     ]
 }

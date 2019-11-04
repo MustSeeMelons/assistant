@@ -1,5 +1,5 @@
 import { LOGGER } from "./../logger";
-import { AppConfig, DEFAULT_CONFIG, ResizeEvent } from "./../definitions";
+import { IAppConfig, DEFAULT_CONFIG, IResizeEvent } from "./../definitions";
 import { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage } from "electron";
 import * as path from "path";
 import * as url from "url";
@@ -16,7 +16,7 @@ const nativeIcon = nativeImage.createFromPath(
 let mainWindow: Electron.BrowserWindow;
 let tray: Electron.Tray;
 let wakeTimeout: NodeJS.Timeout;
-let config: AppConfig;
+let config: IAppConfig;
 
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 
@@ -26,7 +26,7 @@ const loadConfiguration = () => {
             path.join(__dirname, "src/resources/config.json")
         );
 
-        config = JSON.parse(buffer.toString("UTF-8")) as AppConfig;
+        config = JSON.parse(buffer.toString("UTF-8")) as IAppConfig;
     } catch (e) {
         LOGGER.error(`$CONFIG READ FAIL ${e}`);
         config = DEFAULT_CONFIG;
@@ -87,7 +87,7 @@ function createWindow() {
         mainWindow = null;
     });
 
-    mainWindow.on("minimize", function(event: any) {
+    mainWindow.on("minimize", function (event: any) {
         event.preventDefault();
         mainWindow.hide();
         snoozeProcessor();
@@ -98,13 +98,13 @@ function createWindow() {
     const contextMenu = Menu.buildFromTemplate([
         {
             label: "Summon Clippy",
-            click: function() {
+            click: function () {
                 mainWindow.show();
             },
         },
         {
             label: "Hurt Clippy",
-            click: function() {
+            click: function () {
                 mainWindow.destroy();
                 app.quit();
             },
@@ -118,7 +118,7 @@ function createWindow() {
         snoozeProcessor();
     });
 
-    ipcMain.on(EVENTS.RESIZE, (e: any, event: ResizeEvent) => {
+    ipcMain.on(EVENTS.RESIZE, (e: any, event: IResizeEvent) => {
         mainWindow.setContentSize(event.x, event.y);
     });
 

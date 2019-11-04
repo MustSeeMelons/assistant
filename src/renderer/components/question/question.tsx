@@ -19,8 +19,8 @@ export const Question = (props: QuestionProps) => {
             return props.isAnswerCorrect ? (
                 <div className="result-wrap correct">Correct!</div>
             ) : (
-                <div className="result-wrap wrong">{props.correct_answer}</div>
-            );
+                    <div className="result-wrap wrong">{props.correct_answer}</div>
+                );
         }
     };
 
@@ -35,12 +35,12 @@ export const Question = (props: QuestionProps) => {
                 </Button>
             </div>
         ) : (
-            <div className="operations">
-                <Button type="btn-accept" onClick={props.onAcceptAnswer}>
-                    Accept!
+                <div className="operations">
+                    <Button type="btn-accept" onClick={props.onAcceptAnswer}>
+                        Accept!
                 </Button>
-            </div>
-        );
+                </div>
+            );
     };
 
     return (

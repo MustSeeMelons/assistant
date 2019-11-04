@@ -5,25 +5,25 @@ export enum EVENTS {
     RESIZE = "RESIZE",
 }
 
-export interface ResizeEvent {
+export interface IResizeEvent {
     x: number;
     y: number;
 }
 
-export interface Message {
+export interface IMessage {
     title: string;
     text: string;
 }
 
-export interface AppConfig {
+export interface IAppConfig {
     questionAmount: number;
     sleepTime: number;
     wakeDelay: number;
     autoDelay: number;
-    messageConfig: Array<Message>;
+    messageConfig: Array<IMessage>;
 }
 
-export const DEFAULT_CONFIG: AppConfig = {
+export const DEFAULT_CONFIG: IAppConfig = {
     questionAmount: 1,
     sleepTime: 5000,
     wakeDelay: 5000,

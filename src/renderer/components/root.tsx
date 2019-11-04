@@ -1,33 +1,30 @@
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
-import _ from "lodash";
 import "./root.scss";
-import { remote, ipcRenderer } from "electron";
+import _ from "lodash";
+import { ipcRenderer } from "electron";
 import { Clippy } from "./clippy/clippy";
 import { Baloon } from "./baloon/baloon";
-import * as moment from "moment-business-days";
 import "../../../node_modules/roboto-fontface/css/roboto/roboto-fontface.css";
-import { Message } from "./message/message";
 import { ProcessedTriviaQuestion, API, TriviaApi } from "../api/api";
 import { Question } from "./question/question";
-import { EVENTS, AppConfig, ResizeEvent } from "../../definitions";
+import { EVENTS, IAppConfig, IResizeEvent, IMessage } from "../../definitions";
 import { Error } from "./error/error";
+import { Message } from "./message/message";
 
 interface RootState {
-    tillTarget: number;
     questions: Array<ProcessedTriviaQuestion>;
     hasRequestFailed: boolean;
     isRequestInProgress: boolean;
     currentQuestion?: ProcessedTriviaQuestion;
     currentAnswer?: string;
     isAnswerCorrect?: boolean;
-    config?: AppConfig;
+    config?: IAppConfig;
+    message: IMessage;
 }
 
 class Root extends Component {
-    targetDate = moment("2019-07-31", "YYYY-MM-DD");
     api: TriviaApi = API();
-    rootRef: React.RefObject<HTMLDivElement>;
+    rootRef: React.RefObject<HTMLDivElement>; // for getting dimensions for the resize event
     autoAnswerTimeout: NodeJS.Timeout;
     nextQuestionTimeout: NodeJS.Timeout;
 
@@ -38,13 +35,13 @@ class Root extends Component {
     }
 
     state: RootState = {
-        tillTarget: this.targetDate.businessDiff(moment()),
         hasRequestFailed: false,
         questions: [],
         currentQuestion: undefined,
         currentAnswer: undefined,
         isAnswerCorrect: undefined,
         isRequestInProgress: false,
+        message: undefined
     };
 
     componentDidMount = () => {
@@ -55,13 +52,14 @@ class Root extends Component {
         }
     };
 
+    // Sending the dimenstions on every update
     componentDidUpdate = () => {
         const curr = this.rootRef.current;
 
         ipcRenderer.send(EVENTS.RESIZE, {
             x: curr.clientWidth,
             y: curr.clientHeight,
-        } as ResizeEvent);
+        } as IResizeEvent);
     };
 
     componentWillUnmount = () => {
@@ -69,10 +67,21 @@ class Root extends Component {
         clearTimeout(this.nextQuestionTimeout);
     };
 
+    selectMessage = () => {
+        this.setState({
+            message: _.cloneDeep(_.sample(this.state.config.messageConfig))
+        });
+    }
+
+    /**
+     * Setting up event listeners
+     * @memberof Root
+     */
     setupIpcMainHandler = () => {
-        ipcRenderer.on(EVENTS.CONFIG, (event: any, config: AppConfig) => {
+        ipcRenderer.on(EVENTS.CONFIG, (event: any, config: IAppConfig) => {
             this.setState({
                 config: config,
+                message: _.cloneDeep(_.sample(config.messageConfig))
             });
 
             this.nextQuestionTimeout = setTimeout(() => {
@@ -81,13 +90,14 @@ class Root extends Component {
         });
 
         ipcRenderer.on(EVENTS.WAKE, (event: any) => {
+            this.selectMessage();
             this.nextQuestionTimeout = setTimeout(() => {
                 this.onNextQuestionHandler();
             }, this.state.config.autoDelay);
         });
     };
 
-    loadAndPrepareQuestions = async (config: AppConfig) => {
+    loadAndPrepareQuestions = async (config: IAppConfig) => {
         clearTimeout(this.nextQuestionTimeout);
 
         try {
@@ -146,13 +156,17 @@ class Root extends Component {
         // Clearing the next question timeout
         clearTimeout(this.nextQuestionTimeout);
 
+        // Fetch new questions if we don't have any left
         if (_.size(this.state.questions) === 0) {
             this.loadAndPrepareQuestions(this.state.config);
         } else {
+            // We cant modify state directly, so we need to clone it, modify it, set it
             const clonedQuestions = _.cloneDeep(this.state.questions);
             const currentQuestion = _.first(clonedQuestions.splice(0, 1));
 
             this.autoAnswerTimeout = setTimeout(() => {
+                clearTimeout(this.autoAnswerTimeout);
+
                 this.autoAnswerHandler(currentQuestion);
             }, this.state.config.autoDelay);
 
@@ -166,7 +180,13 @@ class Root extends Component {
     };
 
     onAcceptAnswerHandler = (event: React.MouseEvent) => {
-        // TODO: add class, delay state change
+        clearTimeout(this.autoAnswerTimeout);
+        clearTimeout(this.nextQuestionTimeout);
+
+        this.nextQuestionTimeout = setTimeout(() => {
+            this.onNextQuestionHandler();
+        }, this.state.config.autoDelay);
+
         this.setState({
             isAnswerCorrect:
                 this.state.currentAnswer ===
@@ -177,6 +197,8 @@ class Root extends Component {
     onChoiceChange = (choice: string) => {
         if (this.state.isAnswerCorrect === undefined) {
             clearTimeout(this.autoAnswerTimeout);
+
+            // If user selected answer and left, lets auto answer it for him
             this.autoAnswerTimeout = setTimeout(() => {
                 this.autoAnswerHandler(this.state.currentQuestion);
             }, this.state.config.autoDelay);
@@ -217,11 +239,10 @@ class Root extends Component {
             !this.state.hasRequestFailed &&
             this.state.config
         ) {
-            const message = _.sample(this.state.config.messageConfig);
             return (
                 <Message
-                    title={message.title}
-                    text={message.text}
+                    title={this.state.message.title}
+                    text={this.state.message.text}
                     onAccept={() => {
                         this.loadAndPrepareQuestions(this.state.config);
                     }}
